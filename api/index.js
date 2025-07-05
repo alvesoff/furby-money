@@ -36,7 +36,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Servir arquivos estáticos
-app.use(express.static('./', {
+app.use(express.static('../', {
   index: 'index.html',
   setHeaders: (res, path) => {
     if (path.endsWith('.html')) {
@@ -83,12 +83,12 @@ const connectDB = async () => {
 connectDB();
 
 // Importar rotas
-const authRoutes = require('./backend/routes/auth');
-const userRoutes = require('./backend/routes/users');
-const investmentRoutes = require('./backend/routes/investments');
-const pixRoutes = require('./backend/routes/pix');
-const asaasRoutes = require('./backend/routes/asaas');
-const transactionRoutes = require('./backend/routes/transactions');
+const authRoutes = require('../backend/routes/auth');
+const userRoutes = require('../backend/routes/users');
+const investmentRoutes = require('../backend/routes/investments');
+const pixRoutes = require('../backend/routes/pix');
+const asaasRoutes = require('../backend/routes/asaas');
+const transactionRoutes = require('../backend/routes/transactions');
 
 // Usar rotas
 app.use('/api/auth', authRoutes);
@@ -154,25 +154,9 @@ app.use('*', (req, res) => {
       message: 'Endpoint não encontrado'
     });
   } else {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(require('path').join(__dirname, '../index.html'));
   }
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`🌐 Frontend: http://localhost:${PORT}`);
-  console.log(`🔗 API: http://localhost:${PORT}/api`);
-  console.log(`📊 Health Check: http://localhost:${PORT}/api/health`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('🔄 Recebido SIGTERM. Fechando servidor graciosamente...');
-  mongoose.connection.close(() => {
-    console.log('📦 Conexão MongoDB fechada.');
-    process.exit(0);
-  });
-});
-
+// Para Vercel - exportar como função serverless
 module.exports = app;
