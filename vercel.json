@@ -54,10 +54,5 @@
     "CORS_ORIGIN": "https://furby-money-hzlfuxy0k-alvesoffs-projects.vercel.app",
     "FRONTEND_URL": "https://furby-money-hzlfuxy0k-alvesoffs-projects.vercel.app",
     "API_BASE_URL": "https://furby-money-hzlfuxy0k-alvesoffs-projects.vercel.app/api"
-  },
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30
-    }
   }
 }
