@@ -3,11 +3,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Middlewares de Segurança
 app.use(helmet());
@@ -25,7 +23,7 @@ app.use('/api/', limiter);
 
 // CORS
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:8000',
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:8000', 'https://furby-money-hzlfuxy0k-alvesoffs-projects.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -35,52 +33,59 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Servir arquivos estáticos
-app.use(express.static('../', {
-  index: 'index.html',
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache');
-    }
-  }
-}));
+// Servir arquivos estáticos (removido para Vercel - será servido estaticamente)
+// app.use(express.static('../', {
+//   index: 'index.html',
+//   setHeaders: (res, path) => {
+//     if (path.endsWith('.html')) {
+//       res.setHeader('Cache-Control', 'no-cache');
+//     }
+//   }
+// }));
 
 // Conectar ao MongoDB
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected) {
+    return;
+  }
+  
   try {
-    let mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/furby_investimentos';
+    const mongoURI = process.env.MONGODB_URI || process.env.MONGODB_URI_PROD;
     
-    try {
-      await mongoose.connect(mongoURI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 5000, // Timeout de 5 segundos
-      });
-      
-      console.log('✅ Conectado ao MongoDB');
-    } catch (localError) {
-      console.log('⚠️ MongoDB local não disponível, iniciando MongoDB Memory Server...');
-      
-      // Usar MongoDB Memory Server como fallback
-      const mongod = await MongoMemoryServer.create();
-      mongoURI = mongod.getUri();
-      
-      await mongoose.connect(mongoURI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      
-      console.log('✅ Conectado ao MongoDB Memory Server');
-      console.log('📝 Nota: Usando banco de dados em memória para desenvolvimento');
+    if (!mongoURI) {
+      throw new Error('MONGODB_URI não configurado');
     }
+    
+    await mongoose.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000,
+      maxPoolSize: 10,
+      bufferCommands: false,
+    });
+    
+    isConnected = true;
+    console.log('✅ Conectado ao MongoDB Atlas');
   } catch (error) {
     console.error('❌ Erro ao conectar com MongoDB:', error.message);
-    process.exit(1);
+    throw error;
   }
 };
 
-// Inicializar conexão
-connectDB();
+// Middleware para conectar ao DB antes de cada request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erro de conexão com banco de dados'
+    });
+  }
+});
 
 // Importar rotas
 const authRoutes = require('../backend/routes/auth');
@@ -146,16 +151,12 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Rota 404
+// Rota 404 para API
 app.use('*', (req, res) => {
-  if (req.originalUrl.startsWith('/api/')) {
-    res.status(404).json({
-      success: false,
-      message: 'Endpoint não encontrado'
-    });
-  } else {
-    res.sendFile(require('path').join(__dirname, '../index.html'));
-  }
+  res.status(404).json({
+    success: false,
+    message: 'Endpoint não encontrado'
+  });
 });
 
 // Para Vercel - exportar como função serverless
