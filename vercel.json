@@ -42,17 +42,8 @@
   ],
   "env": {
     "NODE_ENV": "production",
-    "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret",
-    "ASAAS_API_KEY": "@asaas_api_key",
     "ASAAS_ENVIRONMENT": "production",
     "ASAAS_BASE_URL": "https://api.asaas.com/v3",
-    "ASAAS_WEBHOOK_URL": "https://furby-money-hzlfuxy0k-alvesoffs-projects.vercel.app/api/asaas/webhook",
-    "ASAAS_WALLET_ID": "@asaas_wallet_id",
-    "COMPANY_PIX_KEY": "@company_pix_key",
-    "PIX_PROVIDER": "asaas",
-    "CORS_ORIGIN": "https://furby-money-hzlfuxy0k-alvesoffs-projects.vercel.app",
-    "FRONTEND_URL": "https://furby-money-hzlfuxy0k-alvesoffs-projects.vercel.app",
-    "API_BASE_URL": "https://furby-money-hzlfuxy0k-alvesoffs-projects.vercel.app/api"
+    "PIX_PROVIDER": "asaas"
   }
 }
